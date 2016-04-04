@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>1</daysToKeep>
+        <numToKeep>1</numToKeep>
+        <artifactDaysToKeep>1</artifactDaysToKeep>
+        <artifactNumToKeep>1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>master</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>* * * * *</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+# signs/flags indicating that this job should not be run
+if [[ ! -f $JENKINS_HOME/credentials ]]; then
+   exit 0
+fi
+if [ ! -z $DEVELOPMENT ]; then
+    exit 0
+fi
+if [[ ! -z $PROVISIONER ]]; then
+    exit 0
+fi
+if [[ -z $TEMPLATE_GIT_URL ]]; then
+    exit 0
+fi
+
+# ensure that the templates are on this instance
+if [[ ! -z $TEMPLATE_LIB_GIT_URL ]]; then
+    chamberlain import-templates $TEMPLATE_LIB_GIT_URL || :
+fi
+# TODO: remove after chamberlain can update its own lib dirs
+cd ~/.chamberlain/libs
+for dir in $(ls); do
+    cd $dir
+    if [[ -d .git ]]; then
+        git pull
+    fi
+    cd ..
+done
+
+# source credentials
+if [[ -f $JENKINS_HOME/credentials ]]; then
+    echo &quot;Sourcing $JENKINS_HOME/credentials&quot;
+    cat $JENKINS_HOME/credentials
+    source $JENKINS_HOME/credentials
+fi
+
+if [[ ! -d $TEMPLATE_DIR ]]; then
+    mkdir $TEMPLATE_DIR
+fi
+cd $TEMPLATE_DIR
+git clone $TEMPLATE_GIT_URL || :
+
+for dir in $(ls); do
+    cd $dir
+    if [[ -d .git ]]; then
+        git checkout ./ &amp;&amp; git clean -ffdx ./
+        git pull
+    fi
+
+    templates=$(find ./* -type f -exec ls \{\} \;)
+    for template in $templates; do
+        sed -i.bak s/{ghprauth}/$OAUTH_ID/g $template
+        rm $template.bak
+        sed -i.bak s/{gitauth}/$SSH_KEY/g $template
+        rm $template.bak
+    done
+
+    cd ..
+done
+
+HOME=~/.
+jenkins-jobs --ignore-cache update --recursive $JENKINS_HOME/templates/:$HOME/.chamberlain/libs/</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

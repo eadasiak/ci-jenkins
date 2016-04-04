@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>templates</name>
+          <description>name of templates to provision with, whitespace delimited list (e.g.: ci-{repo} build-{repo})</description>
+          <defaultValue>ci-{repo}</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>repo</name>
+          <description>repository name</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>master</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+if [[ -z $PROVISIONER ]]; then
+    exit 0
+fi
+
+if [[ -z $GITHUB_DOMAIN ]]; then
+    GITHUB_DOMAIN=github.com
+fi
+
+rm -rf $repo || :
+git clone git@$GITHUB_DOMAIN:$repo ./$repo
+cd $repo
+
+if [[ -f $JENKINS_HOME/credentials ]]; then
+    echo &quot;Sourcing $JENKINS_HOME/credentials&quot;
+    cat $JENKINS_HOME/credentials
+    source $JENKINS_HOME/credentials
+fi
+
+# This instance should NOT be able to provision webhooks
+if [[ ! -z $PROVISIONER ]]; then
+    SSH_KEY=&quot;{gitauth}&quot;
+    OAUTH_ID=&quot;{ghprauth}&quot;
+fi
+
+for template in $templates; do
+    chamberlain gh-sync -f local $template --params gitauth:$SSH_KEY ghprauth:$OAUTH_ID
+done</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+if [[ -z $PROVISIONER ]]; then
+    exit 0
+fi
+
+if [[ -z $TEMPLATE_GIT_URL ]]; then
+    exit 0
+fi
+
+# cache template changes if configured on a provisioner instance.
+# yup.
+REPO_NAME=$(echo $TEMPLATE_GIT_URL|cut -d: -f2)
+rm -rf $TEMPLATE_DIR/$REPO_NAME || :
+git clone $TEMPLATE_GIT_URL $TEMPLATE_DIR/$REPO_NAME
+cp -R ~/.chamberlain/workspace/* $TEMPLATE_DIR/$REPO_NAME
+
+# commit &amp; push
+cd $TEMPLATE_DIR/$REPO_NAME
+# remove cached libs
+rm -rf templates
+git add .
+commit_msg=&quot;template sync $repo [$templates] $(date +&quot;%b %d, %Y&quot;)&quot;
+git commit -m &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
+
+cd $JENKINS_HOME/jobs
+for job in $(ls|grep -v &apos;provision\|provision-repo\|self-update\|template-update&apos;); do
+    rm -rf $job
+done
+
+curl -X POST 127.0.0.1:8080/reload</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

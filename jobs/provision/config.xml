@@ -1,0 +1,316 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Used to provision chamberlain &amp; github credentials required for the github-pullrequest-builder to run.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>1</daysToKeep>
+        <numToKeep>1</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.PasswordParameterDefinition>
+          <name>oauth</name>
+          <description>[REQUIRED] Github Oauth token (preferably the same one used for the create-github-token-credential job)
+
+Requires Scopes:
+    - repo (all)
+    - admin:org
+        - read:org
+    - admin:repo_hook:
+         - write:repo_hook
+         - read:repo_hook</description>
+          <defaultValue>7313vhek7bhECsYB4LHZHw==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GHAPIURL</name>
+          <description>[REQUIRED] Address of Github API server. For corp: https://&lt;ENTERPRISE-GIT-URL&gt;/api/v3</description>
+          <defaultValue>https://api.github.com</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>mesos</name>
+          <description>[OPTIONAL] URL to a mesos master. </description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>mesosUser</name>
+          <description>[OPTIONAL] Mesos framework user.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>mesosPassword</name>
+          <description>[OPTIONAL] Mesos framework password.</description>
+          <defaultValue>zwaxdcxhouD193RsK/JT4g==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>username</name>
+          <description>[OPTIONAL] User for this jenkins instance. If omitted, empty strings will be used for username AND password</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>password</name>
+          <description>[OPTIONAL] Password or api token for the given user</description>
+          <defaultValue>7313vhek7bhECsYB4LHZHw==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>orgs</name>
+          <description>[OPTIONAL]  Comma delimited list of github organizations. Double quotes REQUIRED.
+
+e.g.: &quot;behance&quot;, &quot;adobe-platform&quot;</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>master</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -e
+
+echo &quot;Starting to clean pre-existing credentials &amp; configs.&quot;
+
+if [[ -z $oauth ]]; then
+    echo &quot;No OAuth token given, stopping&quot;
+    exit 1
+fi
+
+if [[ ! -z $mesos ]]; then
+    echo &quot;New mesos master given, resetting config&quot;
+    $JENKINS_HOME/mesos/scripts/configure-mesos.py || :
+fi
+
+CREDS=&quot;&quot;
+if [[ $username != &quot;&quot; ]]; then
+    CREDS=&quot;$username:$password@&quot;
+fi
+
+CRED_IDS=$(curl -sS 127.0.0.1:8080/credential-store/domain/_/api/json)
+CRED_IDS=$(echo $CRED_IDS|python -c &apos;import sys, json; print &quot; &quot;.join(json.load(sys.stdin)[&quot;credentials&quot;].keys())&apos;)
+echo &quot;Deleting credentials: [ $CRED_IDS ]&quot;
+for cred in $CRED_IDS; do
+    echo &quot;DELETING /credential-store/domain/_/credential/$cred/doDelete&quot;
+    curl -X POST ${CREDS}127.0.0.1:8080/credential-store/domain/_/credential/$cred/doDelete
+done
+
+</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+# SETUP SSH KEY
+
+# SPECIAL CASE - SSH keys are mounted in (docker)
+if [[ -f /mnt/.ssh/id_rsa ]]; then
+    if [[ ! -d ~/.ssh ]]; then
+        mkdir ~/.ssh
+    fi
+    cp /mnt/.ssh/id_rsa ~/.ssh/id_rsa
+fi
+
+chown $(whoami):$(whoami) ~/.ssh/id_rsa
+chmod 0600 ~/.ssh/id_rsa</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+# SSH knownhosts &amp; github setup
+
+if [[ -z $GITHUB_DOMAIN ]]; then
+    GITHUB_DOMAIN=github.com
+fi
+ssh-keyscan $GITHUB_DOMAIN &gt;&gt; ~/.ssh/known_hosts
+
+# TODO: parameterize?
+git config --global user.name &quot;chr0n1x&quot;
+git config --global user.email &quot;heilong24@gmail.com&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+# import templates
+if [[ ! -z $TEMPLATE_LIB_GIT_URL ]]; then
+    chamberlain import-templates $TEMPLATE_LIB_GIT_URL || :
+fi</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+if [[ $username = &quot;&quot; ]]; then
+    password=&quot;&quot;
+fi
+
+# JJB config
+if [[ ! -d /etc/jenkins_jobs ]]; then
+    mkdir /etc/jenkins_jobs
+fi
+printf &apos;[jenkins]
+user=%s
+password=%s
+url=http://%s/
+query_plugins_info=False&apos; &quot;$username&quot; &quot;$password&quot; &quot;$(hostname)&quot; &gt; /etc/jenkins_jobs/jenkins_jobs.ini
+
+echo &quot;Wrote /etc/jenkins_jobs/jenkins_jobs.ini&quot;
+
+# write out chamberlain configuration
+if [[ ! -d ~/.chamberlain ]]; then
+    mkdir ~/.chamberlain
+fi
+printf &apos;{
+    &quot;github&quot;: {
+        &quot;url&quot;: &quot;%s&quot;,
+        &quot;auth&quot;: {
+            &quot;token&quot;: &quot;%s&quot;
+        },
+        &quot;orgs&quot;: [ %s ]
+    },
+    &quot;jenkins&quot;: {
+        &quot;instances&quot;: {
+            &quot;local&quot;: {
+                &quot;jenkins&quot;: {
+                    &quot;url&quot;: &quot;http://localhost:8080&quot;,
+                    &quot;user&quot;: &quot;%s&quot;,
+                    &quot;password&quot;: &quot;%s&quot;
+                }
+            }
+        }
+    }
+}&apos; &quot;$GHAPIURL&quot; &quot;$oauth&quot; &quot;$orgs&quot; &quot;$username&quot; &quot;$password&quot; &gt; ~/.chamberlain/config.json
+
+echo &quot;Wrote ~/.chamberlain/config.json&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+# setup POST command credential string
+CREDS=&quot;&quot;
+if [[ $username != &quot;&quot; ]]; then
+    CREDS=&quot;$username:$password@&quot;
+    echo &quot;Creating secrets as ${username}...&quot;
+fi
+
+# write OAuth Token secret text
+DATA=&apos;json={
+        &quot;&quot;: &quot;0&quot;,
+        &quot;credentials&quot;: {
+            &quot;scope&quot;: &quot;GLOBAL&quot;,
+            &quot;id&quot;: &quot;&quot;,
+            &quot;secret&quot;: &quot;OAUTH_TOKEN&quot;,
+            &quot;description&quot;: &quot;oauth token for github pr builder plugin&quot;,
+            &quot;$class&quot;: &quot;org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl&quot;
+        }
+    }&apos;
+DATA=$(echo $DATA|sed &quot;s/OAUTH_TOKEN/$oauth/g&quot;)
+echo &quot;Creating plaintext secret for OAuth token **********&quot;
+curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
+     --data-urlencode &quot;$DATA&quot;
+
+# secret file for id_rsa (THIS IS ASSUMED TO ALREADY EXIST ON NODE)
+ID_RSA_PATH=~/.ssh/id_rsa
+USER=$(whoami)
+echo &quot;Creating plain file secret for $ID_RSA_PATH&quot;
+DATA=&apos;json={
+        &quot;&quot;: &quot;0&quot;,
+        &quot;credentials&quot;: {
+            &quot;scope&quot;: &quot;GLOBAL&quot;,
+            &quot;id&quot;: &quot;&quot;,
+            &quot;username&quot;: &quot;KEY_USER&quot;,
+            &quot;description&quot;: &quot;id_rsa key used to download things&quot;,
+            &quot;privateKeySource&quot;: {
+                &quot;value&quot;: &quot;1&quot;,
+                &quot;privateKeyFile&quot;: &quot;ID_RSA_PATH&quot;,
+                &quot;$class&quot;: &quot;com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey$FileOnMasterPrivateKeySource&quot;
+            },
+            &quot;$class&quot;: &quot;com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&quot;,
+            &quot;kind&quot;: &quot;com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&quot;
+        }
+    }&apos;
+DATA=$(echo ${DATA/ID_RSA_PATH/$ID_RSA_PATH})
+DATA=$(echo ${DATA/KEY_USER/$USER})
+curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
+     --data-urlencode &quot;$DATA&quot;
+
+# write the SSH_KEY credential ID (not contents) to a file
+DATA=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot; \
+       |grep Username -B4|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
+echo &quot;SSH_KEY=$DATA&quot; &gt; $JENKINS_HOME/credentials
+
+# write the OAuth credential ID (not contents) to a file (BASED ON GHPRBuilder config)
+OAUTH_ID=$(cat $JENKINS_HOME/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml\
+|grep ci-jenkins -B1|grep id|tr -d [:space:]|sed -e &apos;s/&lt;[^&gt;]*&gt;//g&apos;)
+echo &quot;OAUTH_ID=$OAUTH_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
+
+# Write OAuth secret ID to file, just in case
+OAUTH_SYS_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot;\
+|grep description.*token -B1|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
+echo &quot;OAUTH_SYS_ID=$OAUTH_SYS_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
+
+echo &quot;Configuring Github Plugins&quot;
+$JENKINS_HOME/mesos/scripts/configure-gh-plugin.py --workspace $JENKINS_HOME github $OAUTH_SYS_ID $GHAPIURL
+$JENKINS_HOME/mesos/scripts/configure-gh-plugin.py --workspace $JENKINS_HOME ghpr $OAUTH_SYS_ID $GHAPIURL
+
+
+echo &quot;Configuring Mesos&quot;
+ARGS=&quot;&quot;
+if [[ ! -z $mesosUser ]] &amp;&amp; [[ ! -z $mesosPassword ]]; then
+DATA=&apos;json={
+        &quot;&quot;: &quot;0&quot;,
+        &quot;credentials&quot;: {
+            &quot;scope&quot;: &quot;GLOBAL&quot;,
+            &quot;id&quot;: &quot;&quot;,
+            &quot;username&quot;: &quot;USER&quot;,
+            &quot;password&quot;: &quot;PASSWORD&quot;,
+            &quot;description&quot;: &quot;Mesos-username&amp;password&quot;,
+            &quot;$class&quot;: &quot;com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&quot;
+        }
+    }&apos;
+DATA=$(echo ${DATA/PASSWORD/$mesosPassword})
+DATA=$(echo ${DATA/USER/$mesosUser})
+curl -XPOST &quot;127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
+     --data-urlencode &quot;$DATA&quot;
+
+# write mesos-framework credential ID
+MESOS_CRED_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot;|\
+grep &quot;Mesos-&quot; -B1|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
+echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
+
+ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
+fi
+
+if [[ ! -z $mesos ]] &amp;&amp; [[ -z $PROVISIONER ]]; then
+    ARGS=&quot;--mesos-master $mesos --workspace $JENKINS_HOME $ARGS&quot;
+    $JENKINS_HOME/mesos/scripts/configure-mesos.py $ARGS
+fi</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo &quot;Wrote to $JENKINS_HOME/credentials&quot;
+cat $JENKINS_HOME/credentials</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+CREDS=&quot;&quot;
+if [[ $username != &quot;&quot; ]]; then
+    CREDS=&quot;$username:$password@&quot;
+fi
+
+echo &quot;============================ SYSTEM RESTART ============================&quot;
+curl -X POST ${CREDS}127.0.0.1:8080/safeRestart</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
