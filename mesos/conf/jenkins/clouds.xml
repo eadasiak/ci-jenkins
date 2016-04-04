@@ -1,0 +1,37 @@
+  <org.jenkinsci.plugins.mesos.MesosCloud plugin="mesos">
+    <name>MesosCloud</name>
+    <nativeLibraryPath>/usr/lib/libmesos.so</nativeLibraryPath>
+    <master>zk://leader.mesos:2181/mesos</master>
+    <description></description>
+    <frameworkName>jenkins</frameworkName>
+    <slavesUser>root</slavesUser>
+    <principal>jenkins</principal>
+    <secret></secret>
+    <checkpoint>true</checkpoint>
+    <onDemandRegistration>false</onDemandRegistration>
+    <jenkinsURL></jenkinsURL>
+    <slaveInfos>
+      <org.jenkinsci.plugins.mesos.MesosSlaveInfo>
+        <slaveCpus>0.5</slaveCpus>
+        <slaveMem>512</slaveMem>
+        <executorCpus>0.1</executorCpus>
+        <maxExecutors>4</maxExecutors>
+        <executorMem>128</executorMem>
+        <remoteFSRoot>jenkins</remoteFSRoot>
+        <idleTerminationMinutes>3</idleTerminationMinutes>
+        <jvmArgs>-Xms16m -XX:+UseConcMarkSweepGC -Djava.net.preferIPv4Stack=true</jvmArgs>
+        <jnlpArgs>-noReconnect</jnlpArgs>
+        <containerInfo>
+          <type>DOCKER</type>
+          <dockerImage>mesosphere/jenkins-dind:0.2.1</dockerImage>
+          <networking>BRIDGE</networking>
+          <useCustomDockerCommandShell>true</useCustomDockerCommandShell>
+          <customDockerCommandShell>wrapper.sh</customDockerCommandShell>
+          <dockerPrivilegedMode>true</dockerPrivilegedMode>
+          <dockerForcePullImage>false</dockerForcePullImage>
+        </containerInfo>
+        <mode>NORMAL</mode>
+        <labelString>docker-ci</labelString>
+      </org.jenkinsci.plugins.mesos.MesosSlaveInfo>
+    </slaveInfos>
+  </org.jenkinsci.plugins.mesos.MesosCloud>

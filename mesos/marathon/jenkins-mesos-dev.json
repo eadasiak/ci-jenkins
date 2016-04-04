@@ -1,0 +1,34 @@
+{
+  "id": "jenkins",
+  "cpus": 0.3,
+  "mem": 2048,
+  "instances": 1,
+  "env": {
+      "JENKINS_FRAMEWORK_NAME": "jenkins",
+      "JENKINS_CONTEXT": "/service/jenkins",
+      "JENKINS_MESOS_MASTER": "zk://192.168.99.100:2181/mesos",
+      "JVM_OPTS": "-Xms1024m -Xmx1024m",
+      "SSH_KNOWN_HOSTS": "github.com",
+      "DEVELOPMENT": "true"
+  },
+  "ports": [0, 0],
+  "container": {
+       "type": "DOCKER",
+       "docker": {
+           "image": "eadasiak/jenkins-mesos:1.1",
+           "network": "HOST"
+       }
+   },
+   "healthChecks": [
+    {
+      "path": "/service/jenkins",
+      "portIndex": 0,
+      "protocol": "HTTP",
+      "gracePeriodSeconds": 30,
+      "intervalSeconds": 60,
+      "timeoutSeconds": 20,
+      "maxConsecutiveFailures": 3
+    }
+  ]
+}
+
