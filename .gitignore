@@ -1,0 +1,7 @@
+.envrc
+jobs/**/*
+credentials
+credentials.xml
+templates
+secret*
+config.xml

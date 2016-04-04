@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: vincent
+Build-Jdk: 1.8.0_66
+Extension-Name: mesos
+Specification-Title: The Jenkins Plugins Parent POM Project
+Implementation-Title: mesos
+Implementation-Version: 0.12.0
+Group-Id: org.jenkins-ci.plugins
+Short-Name: mesos
+Long-Name: mesos
+Url: http://wiki.jenkins-ci.org/display/JENKINS/Mesos+Plugin
+Plugin-Version: 0.12.0
+Hudson-Version: 1.565.3
+Jenkins-Version: 1.565.3
+Plugin-Dependencies: credentials:1.22,metrics:3.1.2.6;resolution:=opti
+ onal
+Plugin-Developers: Benjamin Hindman:benh:benh@berkeley.edu,Benjamin Ma
+ hler:bmahler:benjamin.mahler@gmail.com,Chris Aniszczyk:caniszczyk:zx@
+ twitter.com,Vinod Kone:vinodkone:vinodkone@gmail.com,Mohit Soni:mohit
+ soni:mohitsoni1989@gmail.com,Manivannan Selvaraj:maselvaraj:citizenma
+ ni@gmail.com,Vincent Latombe:vlatombe:vincent@latombe.net
+

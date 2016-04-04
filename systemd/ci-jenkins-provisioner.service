@@ -1,0 +1,37 @@
+[Unit]
+Description=CI-Jenkins Provisioner Instance
+Requires=docker.service
+After=docker.service
+
+[Service]
+EnvironmentFile=/etc/environment
+User=core
+Type=simple
+Restart=always
+RestartSec=4
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker pull adobe-platform/ci-jenkins:latest
+ExecStartPre=-/usr/bin/sudo rm -rf /home/core/ci-jenkins
+ExecStartPre=/usr/bin/git clone https://github.com/adobe-platform/ci-jenkins /home/core/ci-jenkins
+ExecStartPre=-/usr/bin/docker rm -f ci-jenkins-provisioner
+ExecStart=/usr/bin/bash -c \
+'/usr/bin/docker run \
+  --name ci-jenkins-provisioner \
+  --hostname $COREOS_PRIVATE_IPV4 \
+  -v /home/core/.ssh:/mnt/.ssh:ro \
+  -v /home/core/ci-jenkins:/var/jenkins_home \
+  -e TEMPLATE_LIB_GIT_URL \
+  -e TEMPLATE_GIT_URL \
+  -e GITHUB_DOMAIN \
+  -e PROVISIONER="true" \
+  -u root \
+  -p 80:8080 \
+  adobeplatform/ci-jenkins'
+ExecStop=/usr/bin/docker stop ci-jenkins-provisioner
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+Global=false
+MachineMetadata=role=jenkins

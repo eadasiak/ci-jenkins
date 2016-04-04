@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: nicolas
+Build-Jdk: 1.8.0_25
+Extension-Name: aws-java-sdk
+Specification-Title: This plugin provides AWS SDK for Java for other p
+ lugins.
+Implementation-Title: aws-java-sdk
+Implementation-Version: 1.10.45
+Group-Id: org.jenkins-ci.plugins
+Short-Name: aws-java-sdk
+Long-Name: Amazon Web Services SDK
+Url: https://wiki.jenkins-ci.org/display/JENKINS/Amazon+Web+Services+S
+ DK+library
+Plugin-Version: 1.10.45
+Hudson-Version: 1.447
+Jenkins-Version: 1.447
+Plugin-Dependencies: jackson2-api:2.5.4
+Plugin-Developers: Vincent Latombe:vlatombe:vincent@latombe.net
+

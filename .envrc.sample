@@ -1,0 +1,2 @@
+export TEMPLATE_LIB_GIT_URL="git@github.com:adobe-platform/chamberlain-templates"
+export TEMPLATE_GIT_URL="git@github.com:adobe-platform/ci-jenkins-templates"

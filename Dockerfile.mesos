@@ -1,0 +1,68 @@
+FROM nginx:1.9.11
+WORKDIR /tmp
+
+# Environment variables used throughout this Dockerfile
+#
+# $JENKINS_STAGING  will be used to download plugins and copy config files
+#                   during the Docker build process.
+#
+# $JENKINS_HOME     will be the final destination that Jenkins will use as its
+#                   data directory. This cannot be populated before Marathon
+#                   has a chance to create the host-container volume mapping.
+#
+ENV JENKINS_WAR_URL https://updates.jenkins-ci.org/download/war/1.642.2/jenkins.war
+ENV JENKINS_STAGING /var/jenkins_staging
+ENV JENKINS_HOME /var/jenkins_home
+ENV JENKINS_FOLDER /usr/share/jenkins/
+ENV JAVA_HOME "/usr/lib/jvm/java-7-openjdk-amd64"
+ENV JENKINS_CONTEXT ""
+ENV JENKINS_PORT 8080
+ENV NGINX_PORT 9999
+
+
+RUN apt-get update && \
+    apt-get install -y git python zip curl default-jre jq lsb-release build-essential python-pip
+
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E56151BF && \
+    echo "deb http://repos.mesosphere.io/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs)  main" | tee /etc/apt/sources.list.d/mesosphere.list && \
+    apt-get update && \
+    apt-get install -y mesos
+
+RUN git clone https://github.com/behance/chamberlain /opt/chamberlain && \
+    cd /opt/chamberlain && \
+    make && \
+    cd -
+
+RUN mkdir -p /var/log/nginx/jenkins
+COPY mesos/conf/nginx/nginx.conf /etc/nginx/nginx.conf
+
+RUN mkdir -p $JENKINS_HOME
+RUN mkdir -p ${JENKINS_FOLDER}/war
+ADD ${JENKINS_WAR_URL} ${JENKINS_FOLDER}/jenkins.war
+
+ADD jobs/ "${JENKINS_HOME}/jobs/"
+ADD plugins/ "${JENKINS_HOME}/plugins/"
+COPY mesos/scripts/bootstrap.py /usr/local/jenkins/bin/bootstrap.py
+
+COPY config.xml "${JENKINS_STAGING}/config.xml"
+COPY mesos/conf/jenkins/jenkins.model.JenkinsLocationConfiguration.xml "${JENKINS_STAGING}/jenkins.model.JenkinsLocationConfiguration.xml"
+COPY mesos/conf/jenkins/nodeMonitors.xml "${JENKINS_STAGING}/nodeMonitors.xml"
+COPY mesos/conf/jenkins/clouds.xml "${JENKINS_STAGING}/clouds.xml"
+COPY org.jenkinsci.plugins.ghprb.GhprbTrigger.xml "${JENKINS_STAGING}/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml"
+
+# Override the default property for DNS lookup caching
+RUN echo 'networkaddress.cache.ttl=60' >> ${JAVA_HOME}/jre/lib/security/java.security
+
+CMD /usr/local/jenkins/bin/bootstrap.py && nginx && \
+java ${JVM_OPTS}                                    \
+    -Dhudson.udp=-1                                 \
+    -Djava.awt.headless=true                        \
+    -DhudsonDNSMultiCast.disabled=true              \
+    -jar ${JENKINS_FOLDER}/jenkins.war              \
+    --httpPort=${PORT1:-$JENKINS_PORT}                             \
+    --webroot=${JENKINS_FOLDER}/war                 \
+    --ajp13Port=-1                                  \
+    --httpListenAddress=${JENKINS_HOST:-127.0.0.1}  \
+    --ajp13ListenAddress=${JENKINS_HOST:-127.0.0.1} \
+    --preferredClassLoader=java.net.URLClassLoader  \
+    --prefix=${JENKINS_CONTEXT}

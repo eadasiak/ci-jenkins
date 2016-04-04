@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: fupton
+Build-Jdk: 1.8.0_45
+Extension-Name: ec2
+Implementation-Title: ec2
+Implementation-Version: 1.31
+Plugin-Class: hudson.plugins.ec2.PluginImpl
+Group-Id: org.jenkins-ci.plugins
+Short-Name: ec2
+Long-Name: Amazon EC2 plugin
+Url: http://wiki.jenkins-ci.org/display/JENKINS/Amazon+EC2+Plugin
+Plugin-Version: 1.31
+Hudson-Version: 1.447
+Jenkins-Version: 1.447
+Mask-Classes: org.bouncycastle.
+PluginFirstClassLoader: true
+Plugin-Dependencies: node-iterator-api:1.1,aws-java-sdk:1.10.26
+Plugin-Developers: Francis Upton IV:francisu:fupton@talend.com,Kohsuke
+  Kawaguchi:kohsuke:kkawaguchi@cloudbees.com
+

@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: darthtanner
+Build-Jdk: 1.8.0_74
+Extension-Name: ghprb
+Implementation-Title: ghprb
+Implementation-Version: 1.31.2
+Group-Id: org.jenkins-ci.plugins
+Short-Name: ghprb
+Long-Name: GitHub Pull Request Builder
+Url: https://wiki.jenkins-ci.org/display/JENKINS/GitHub+pull+request+b
+ uilder+plugin
+Plugin-Version: 1.31.2
+Hudson-Version: 1.565.3
+Jenkins-Version: 1.565.3
+Plugin-Dependencies: github-api:1.71,ssh-agent:1.3,build-flow-plugin:0
+ .12;resolution:=optional,job-dsl:1.39;resolution:=optional,git:2.2.4,
+ credentials:1.21,token-macro:1.10;resolution:=optional,github:1.9.1,m
+ atrix-project:1.4.1,plain-credentials:1.1
+Plugin-Developers: Honza Brázdil:janinko:jbrazdil@redhat.com,Valdis R
+ igdon:valdisrigdon:
+
