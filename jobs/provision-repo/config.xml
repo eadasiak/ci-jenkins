@@ -79,9 +79,8 @@ if [[ ! -z $PROVISIONER ]]; then
     OAUTH_ID=&quot;{ghprauth}&quot;
 fi
 
-for template in $templates; do
-    chamberlain gh-sync -f local $template --params gitauth:$SSH_KEY ghprauth:$OAUTH_ID
-done</command>
+chamberlain gh-sync -f local $templates --params gitauth:$SSH_KEY ghprauth:$OAUTH_ID
+</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
