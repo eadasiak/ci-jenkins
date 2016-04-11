@@ -10,4 +10,6 @@ while(! docker info > /dev/null 2>&1); do
 done
 echo "==> Docker Daemon is up and running!"
 
+apk add make
+
 /bin/sh -c "$@"
