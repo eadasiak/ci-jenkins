@@ -51,12 +51,17 @@ reader:
 # 		git clone git@github.com:adobe-platform/ci-jenkins <YOUR JENKINS HOME>
 # TODO: probably should just be a placeholder for a chef cookbook
 cent:
-	yum install -y jenkins libffi-devel openssl-devel
+	sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+	sudo rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+	yum install -y java jenkins libffi-devel openssl-devel
 	which python || yum install -y python
-	which pip || yum install -y python-pip
+	which pip || rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm && yum -y install python-pip
 	cd /opt && git clone https://github.com/behance/chamberlain && \
 	    cd chamberlain && make && cd -
 	sed -i.bak s/JENKINS_USER=\"jenkins\"/JENKINS_USER=\"root\"/g /etc/sysconfig/jenkins
+	# a hack because our internal infra doesn't allow writing to /tmp for some reason
+	sed -i 's/^JENKINS_JAVA_OPTIONS=.*/JENKINS_JAVA_OPTIONS=\"-Djava.awt.headless=true -Djava.io.tmpdir=$$JENKINS_HOME\/tmp\"/' /etc/sysconfig/jenkins
+	mkdir /var/lib/jenkins/tmp
 
 clean:
 	git add .
