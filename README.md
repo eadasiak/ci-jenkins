@@ -1,12 +1,12 @@
 # CI Jenkins
 
-barebones CI jenkins setup that provides github integrations
+CI jenkins setup that provides GitHub integrations and YAML job templates with [jenkins-job-builder](https://github.com/openstack-infra/jenkins-job-builder)
 
 # Purpose
 
 Want [TravisCI](https://travis-ci.com/)-like integrations with Github? Don't have the money or will to set it up? This [JenkinsCI](https://jenkins-ci.org/) configuration repo is your solution!
 
-##### How this repo aims to achive this:
+##### How this repo aims to achieve this:
 
 - provide an automatable means for creating jobs on the fly for your github repositories using [chamberlain](https://github.com/behance/chamberlain) & [jenkins-job-builder](https://github.com/openstack-infra/jenkins-job-builder)
 - abstract away the setup of [github pullrequest builder plugin](https://github.com/janinko/ghprb)
@@ -34,18 +34,12 @@ Once you have both of those, just run the `provision` job. If you have user secu
 
 # Mesos integration
 
-Instances can be launched with Mesos integration so that jobs will be executed on a specified Mesos cluster.  You'll need to launch the Docker image tagged with `:mesos` to use the Mesos integration.  You can either launch a standalone Jenkins master node, or launch a master in your Mesos cluster via Marathon.  Sample Marathon app definitions can be found in the [mesos/marathon](mesos/marathon) directory.  The standalone Jenkins master with Mesos integration requires several environment variables:
+Instances can be launched with Mesos integration so that jobs will be executed on a specified Mesos cluster.
+Jobs intended to be executed on Mesos should have the `<assignedNode>` value (the "Restrict where this project can be run" parameter via the web UI) set to `docker-ci`.  By default, jobs executed on the Mesos cluster are run using the Docker containerizer, and the docker image itself includes [Docker-in-Docker](https://github.com/jpetazzo/dind), plus a few common language runtimes.  More details can be found in the [mesos/dind-agent](mesos/dind-agent) directory of this repo.
 
-| Var | Value | Required? | Purpose |
-| ------------- | ------------- | ------------- | ------------- |
-| `JENKINS_FRAMEWORK_NAME` | (e.g., `jenkins`)| Required | This is the name the Jenkins framework gets registered as in your Mesos cluster |
-| `JENKINS_MESOS_MASTER` | (e.g., `zk://zk.mymesoscluster.org:2181/mesos`) | Required | This is the zookeeper URL for the Mesos cluster's ensemble |
-| `JENKINS_HOST` | (e.g., the returned value of `hostname -i`) | Required | This is the IP address of the standalone Jenkins master |
-| `JENKINS_PORT` | defaults to 8080 | Optional | Modify to assign an alternate port for Jenkins |
+One thing to note is that in our wrapper script for this container is that we install `make`.
 
-Jobs intended to be executed on Mesos should have the `<assignedNode>` value (the "Restrict where this project can be run" parameter via the web UI) set to 'mesos'.  By default, jobs executed on the Mesos cluster are run using the Docker containerizer, and the docker image itself includes [Docker-in-Docker](https://github.com/jpetazzo/dind), plus a few common language runtimes.  More details can be found in the [mesos/dind-agent](mesos/dind-agent) directory of this repo.
-
-You can modify the configuration of the Mesos integration in the [mesos/conf/jenkins/clouds.xml](mesos/conf/jenkins/clouds.xml) file.  The `<master>` and `<jenkinsURL>` values are modified at launch time based on the environment variables passed, and will be overwritten if modified.
+You can modify the configuration of the Mesos integration in the [mesos/conf/jenkins/clouds.xml](mesos/conf/jenkins/clouds.xml) file.  The `<master>` and `<jenkinsURL>` values are modified at launch time (i.e.: with the `provision` job), and will be overwritten if modified.
 
 # Concepts
 
