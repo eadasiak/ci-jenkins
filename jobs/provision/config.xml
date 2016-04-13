@@ -313,6 +313,9 @@ if [[ $username != &quot;&quot; ]]; then
     CREDS=&quot;$username:$password@&quot;
 fi
 
+echo &quot;Re-Registering GitHub push webhooks&quot;
+curl -X POST ${CREDS}127.0.0.1:8080/descriptorByName/github-plugin-configuration/reRegister
+
 echo &quot;============================ SYSTEM RESTART ============================&quot;
 curl -X POST ${CREDS}127.0.0.1:8080/safeRestart</command>
     </hudson.tasks.Shell>
