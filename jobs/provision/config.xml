@@ -242,9 +242,9 @@ curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredent
      --data-urlencode &quot;$DATA&quot;
 
 # write the SSH_KEY credential ID (not contents) to a file
-DATA=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot; \
+SSH_KEY_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot; \
        |grep Username -B4|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
-echo &quot;SSH_KEY=$DATA&quot; &gt; $JENKINS_HOME/credentials
+echo &quot;SSH_KEY=$SSH_KEY_ID&quot; &gt; $JENKINS_HOME/credentials
 
 # write the OAuth credential ID (not contents) to a file (BASED ON GHPRBuilder config)
 OAUTH_ID=$(cat $JENKINS_HOME/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml\
@@ -288,9 +288,15 @@ echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
 ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
 fi
 
-if [[ ! -z $mesos ]] &amp;&amp; [[ -z $PROVISIONER ]]; then
-    ARGS=&quot;--mesos-master $mesos --workspace $JENKINS_HOME $ARGS&quot;
-    $JENKINS_HOME/mesos/scripts/configure-mesos.py $ARGS
+if [[ -z $PROVISIONER ]]; then
+    if [[ ! -z $mesos ]]; then
+        ARGS=&quot;--mesos-master $mesos --workspace $JENKINS_HOME $ARGS&quot;
+        $JENKINS_HOME/mesos/scripts/configure-mesos.py $ARGS
+    fi
+
+    if [[ ! -z $TEMPLATE_GIT_URL ]]; then
+        $JENKINS_HOME/mesos/scripts/configure-update-templates.py --workspace $JENKINS_HOME $TEMPLATE_GIT_URL $SSH_KEY_ID
+    fi
 fi</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
@@ -306,6 +312,9 @@ CREDS=&quot;&quot;
 if [[ $username != &quot;&quot; ]]; then
     CREDS=&quot;$username:$password@&quot;
 fi
+
+echo &quot;Re-Registering GitHub push webhooks&quot;
+curl -X POST ${CREDS}127.0.0.1:8080/descriptorByName/github-plugin-configuration/reRegister
 
 echo &quot;============================ SYSTEM RESTART ============================&quot;
 curl -X POST ${CREDS}127.0.0.1:8080/safeRestart</command>

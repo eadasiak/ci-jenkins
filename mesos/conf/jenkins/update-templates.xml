@@ -1,0 +1,23 @@
+<project>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.4.4">
+    <configVersion>2</configVersion>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url></url>
+        <credentialsId></credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+  </scm>
+  <triggers>
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.18.1">
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+  </triggers>
+</project>
