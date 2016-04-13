@@ -242,9 +242,9 @@ curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredent
      --data-urlencode &quot;$DATA&quot;
 
 # write the SSH_KEY credential ID (not contents) to a file
-DATA=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot; \
+SSH_KEY_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot; \
        |grep Username -B4|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
-echo &quot;SSH_KEY=$DATA&quot; &gt; $JENKINS_HOME/credentials
+echo &quot;SSH_KEY=$SSH_KEY_ID&quot; &gt; $JENKINS_HOME/credentials
 
 # write the OAuth credential ID (not contents) to a file (BASED ON GHPRBuilder config)
 OAUTH_ID=$(cat $JENKINS_HOME/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml\
@@ -295,7 +295,7 @@ if [[ -z $PROVISIONER ]]; then
     fi
 
     if [[ ! -z $TEMPLATE_GIT_URL ]]; then
-        $JENKINS_HOME/mesos/scripts/configure-update-templates.py $TEMPLATE_GIT_URL $SSH_KEY
+        $JENKINS_HOME/mesos/scripts/configure-update-templates.py --workspace $JENKINS_HOME $TEMPLATE_GIT_URL $SSH_KEY_ID
     fi
 fi</command>
     </hudson.tasks.Shell>
