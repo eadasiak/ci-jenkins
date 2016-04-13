@@ -288,9 +288,15 @@ echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
 ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
 fi
 
-if [[ ! -z $mesos ]] &amp;&amp; [[ -z $PROVISIONER ]]; then
-    ARGS=&quot;--mesos-master $mesos --workspace $JENKINS_HOME $ARGS&quot;
-    $JENKINS_HOME/mesos/scripts/configure-mesos.py $ARGS
+if [[ -z $PROVISIONER ]]; then
+    if [[ ! -z $mesos ]]; then
+        ARGS=&quot;--mesos-master $mesos --workspace $JENKINS_HOME $ARGS&quot;
+        $JENKINS_HOME/mesos/scripts/configure-mesos.py $ARGS
+    fi
+
+    if [[ ! -z $TEMPLATE_GIT_URL ]]; then
+        $JENKINS_HOME/mesos/scripts/configure-update-templates.py $TEMPLATE_GIT_URL $SSH_KEY
+    fi
 fi</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
