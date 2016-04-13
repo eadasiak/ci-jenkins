@@ -56,11 +56,27 @@ def merge_config(orig_path, injection_path):
     tree.write(orig_path)
 
 
+def clean_config(job_cfg_path, fixtures_path):
+    """
+    Just remove top level nodes that are common between fixtures
+    and target
+    """
+    tree = ET.parse(job_cfg_path)
+    root = tree.getroot()
+    inject_tree = ET.parse(fixtures_path)
+    for node in inject_tree.getroot():
+        srcnode = root.find("./%s" % node.tag)
+        if srcnode is not None:
+            root.remove(srcnode)
+    tree.write(job_cfg_path)
+
+
 def configure_xml(opts):
     config_path = path.join(opts.workspace,
                             "jobs",
                             "update-templates",
                             "config.xml")
+    clean_config(config_path, fixtures_path())
     merge_config(config_path, fixtures_path())
     jobconfig = XMLFile(config_path)
     inject_scm(jobconfig, opts.sshurl, opts.rsaid)
