@@ -57,13 +57,6 @@ Requires Scopes:
           <description>[OPTIONAL] Password or api token for the given user</description>
           <defaultValue>7313vhek7bhECsYB4LHZHw==</defaultValue>
         </hudson.model.PasswordParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>orgs</name>
-          <description>[OPTIONAL]  Comma delimited list of github organizations. Double quotes REQUIRED.
-
-e.g.: &quot;behance&quot;, &quot;adobe-platform&quot;</description>
-          <defaultValue></defaultValue>
-        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -173,7 +166,7 @@ printf &apos;{
         &quot;auth&quot;: {
             &quot;token&quot;: &quot;%s&quot;
         },
-        &quot;orgs&quot;: [ %s ]
+        &quot;orgs&quot;: []
     },
     &quot;jenkins&quot;: {
         &quot;instances&quot;: {
@@ -186,7 +179,7 @@ printf &apos;{
             }
         }
     }
-}&apos; &quot;$GHAPIURL&quot; &quot;$oauth&quot; &quot;$orgs&quot; &quot;$username&quot; &quot;$password&quot; &gt; ~/.chamberlain/config.json
+}&apos; &quot;$GHAPIURL&quot; &quot;$oauth&quot; &quot;$username&quot; &quot;$password&quot; &gt; ~/.chamberlain/config.json
 
 echo &quot;Wrote ~/.chamberlain/config.json&quot;</command>
     </hudson.tasks.Shell>
