@@ -151,8 +151,8 @@ fi
 printf &apos;[jenkins]
 user=%s
 password=%s
-url=http://%s/
-query_plugins_info=False&apos; &quot;$username&quot; &quot;$password&quot; &quot;$(hostname)&quot; &gt; /etc/jenkins_jobs/jenkins_jobs.ini
+url=http://127.0.0.1:8080
+query_plugins_info=False&apos; &quot;$username&quot; &quot;$password&quot; &gt; /etc/jenkins_jobs/jenkins_jobs.ini
 
 echo &quot;Wrote /etc/jenkins_jobs/jenkins_jobs.ini&quot;
 
@@ -172,7 +172,7 @@ printf &apos;{
         &quot;instances&quot;: {
             &quot;local&quot;: {
                 &quot;jenkins&quot;: {
-                    &quot;url&quot;: &quot;http://localhost:8080&quot;,
+                    &quot;url&quot;: &quot;http://127.0.0.1:8080&quot;,
                     &quot;user&quot;: &quot;%s&quot;,
                     &quot;password&quot;: &quot;%s&quot;
                 }
