@@ -109,11 +109,7 @@ commit_msg=&quot;template sync $repo [$templates] $(date +&quot;%b %d, %Y&quot;)
 git commit -m &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
 
 cd $JENKINS_HOME/jobs
-for job in $(ls|grep -v &apos;provision\|provision-repo\|self-update\|template-update&apos;); do
-    rm -rf $job
-done
-
-curl -X POST 127.0.0.1:8080/reload</command>
+jenkins-jobs delete $(ls|grep -v &apos;provision\|provision-repo\|self-update\|update-templates&apos;) || :</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
