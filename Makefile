@@ -55,7 +55,7 @@ cent:
 	yum -y install mesos marathon
 	wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
 	rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
-	yum install -y java jenkins libffi-devel openssl-devel
+	yum install -y java jenkins libffi-devel openssl-devel gcc
 	which python || yum install -y python
 	which pip || rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm && yum -y install python-pip
 	cd /opt && git clone https://github.com/behance/chamberlain && \
