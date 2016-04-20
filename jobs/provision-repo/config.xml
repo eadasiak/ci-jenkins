@@ -9,7 +9,7 @@
         <hudson.model.StringParameterDefinition>
           <name>templates</name>
           <description>name of templates to provision with, whitespace delimited list (e.g.: ci-{repo} build-{repo})</description>
-          <defaultValue>ci-{repo}</defaultValue>
+          <defaultValue>{repo}-make-ci</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>repo</name>
