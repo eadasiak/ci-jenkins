@@ -57,7 +57,7 @@ cent:
 	rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
 	yum install -y java jenkins libffi-devel openssl-devel gcc
 	which python || yum install -y python
-	which pip || rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm && yum -y install python-pip
+	which pip || rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && yum -y install python-pip
 	cd /opt && git clone https://github.com/behance/chamberlain && \
 	    cd chamberlain && make && cd -
 	sed -i.bak s/JENKINS_USER=\"jenkins\"/JENKINS_USER=\"root\"/g /etc/sysconfig/jenkins
