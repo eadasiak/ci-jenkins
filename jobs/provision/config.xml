@@ -71,6 +71,21 @@ Requires Scopes:
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash -e
+if [[ -z $TEMPLATE_LIB_GIT_URL ]]; then
+  echo "TEMPLATE_LIB_GIT_URL env var not set"
+  exit 1
+fi
+
+if [[ -z $TEMPLATE_GIT_URL ]]; then
+  echo "TEMPLATE_GIT_URL env var not set"
+  exit 1
+fi
+      </command>
+      <command>#!/bin/bash -e
+
+echo &quot;Cleaning pre-existing config files&quot;
+rm -rf ~/.chamberlain
+rm -rf $JENKINS_HOME/templates
 
 echo &quot;Starting to clean pre-existing credentials &amp; configs.&quot;
 
@@ -126,8 +141,8 @@ fi
 ssh-keyscan $GITHUB_DOMAIN &gt;&gt; ~/.ssh/known_hosts
 
 # TODO: parameterize?
-git config --global user.name &quot;chr0n1x&quot;
-git config --global user.email &quot;heilong24@gmail.com&quot;</command>
+git config --global user.name &quot;be-moonbeam&quot;
+git config --global user.email &quot;qa-behance@adobe.com&quot;</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
