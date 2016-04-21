@@ -270,7 +270,7 @@ DATA=&apos;json={
     }&apos;
 DATA=$(echo ${DATA/PASSWORD/$mesosPassword})
 DATA=$(echo ${DATA/USER/$mesosUser})
-curl -XPOST &quot;127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
+curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
      --data-urlencode &quot;$DATA&quot;
 
 # write mesos-framework credential ID
