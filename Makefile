@@ -7,20 +7,11 @@ dev:
 	-e RUNNING_HOST=127.0.0.1      \
 	-e RUNNING_USER=$$(whoami)     \
 	-e DEVELOPMENT="true"          \
+	-e TEMPLATE_GIT_URL            \
+	-e TEMPLATE_LIB_GIT_URL        \
 	-u root                        \
 	-p 8080:8080                   \
 	adobeplatform/ci-jenkins
-
-dev-mesos:
-	docker run --net=host --rm -ti                    \
-	-v $${HOME}/.ssh:/mnt/.ssh:ro                     \
-	-e DEVELOPMENT="true"                             \
-	-e JENKINS_FRAMEWORK_NAME=jenkins                 \
-	-e JENKINS_MESOS_MASTER=zk://zookeeper:2181/mesos \
-	-e JENKINS_HOST=$$(hostname -i)                   \
-	-e JENKINS_CONTEXT=""                             \
-	-u root                                           \
-	adobeplaform/ci-jenkins:mesos
 
 provisioner:
 	docker run --net=host --rm -ti \
