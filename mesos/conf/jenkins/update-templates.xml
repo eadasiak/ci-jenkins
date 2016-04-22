@@ -8,12 +8,7 @@
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
     <submoduleCfg class="list"/>
-    <userRemoteConfigs>
-      <hudson.plugins.git.UserRemoteConfig>
-        <url></url>
-        <credentialsId></credentialsId>
-      </hudson.plugins.git.UserRemoteConfig>
-    </userRemoteConfigs>
+    <userRemoteConfigs/>
   </scm>
   <triggers>
     <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.18.1">
