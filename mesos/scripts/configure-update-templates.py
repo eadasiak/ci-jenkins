@@ -21,30 +21,15 @@ def fixtures_path():
                   "update-templates.xml"))
 
 
-class XMLFile:
-    def __init__(self, path):
-        self.path = copy(path)
-        self.tree = ET.parse(self.path)
-
-    def inject(self, root = ".", injections = {}):
-        baseTree = self.tree.getroot().find(root)
-        for (node, val) in injections.iteritems():
-            relative_node = "./%s" % node
-            childTree = baseTree.find(relative_node)
-            if childTree is None:
-                ET.SubElement(baseTree, node).text = val
-                continue
-            childTree.text = val
-        self.tree.write(self.path)
-
-
-def inject_scm(xmlfile, sshurl, rsa_id):
-    gitscm_root = "scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig"
-    injections = {
-        "url": sshurl,
-        "credentialsId": rsa_id
-    }
-    xmlfile.inject(root=gitscm_root, injections=injections)
+def add_scm(xmlfile, sshurl, rsa_id):
+    tree = ET.parse(xmlfile)
+    scmroot = tree.getroot().find("scm/userRemoteConfigs")
+    scm = ET.SubElement(scmroot, "hudson.plugins.git.UserRemoteConfig")
+    scm_url = ET.SubElement(scm, "url")
+    scm_url.text = sshurl
+    scm_cred_id = ET.SubElement(scm, "credentialsId")
+    scm_cred_id.text = rsa_id
+    tree.write(xmlfile)
 
 
 def merge_config(orig_path, injection_path):
@@ -78,8 +63,8 @@ def configure_xml(opts):
                             "config.xml")
     clean_config(config_path, fixtures_path())
     merge_config(config_path, fixtures_path())
-    jobconfig = XMLFile(config_path)
-    inject_scm(jobconfig, opts.sshurl, opts.rsaid)
+    for template_repo in opts.sshurls:
+        add_scm(config_path, template_repo, opts.rsaid)
 
 
 def main(argv=None):
@@ -88,10 +73,12 @@ def main(argv=None):
     """
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("sshurl",
-                        help="SSH URL of repo that we want push notifications from.")
     parser.add_argument("rsaid",
                         help="Jenkins ID of RSA SSH key credential.")
+    parser.add_argument("sshurls",
+                        nargs="*",
+                        default=[],
+                        help="list of SSH URLs of repos that can be read by rsaid.")
     parser.add_argument("--workspace",
                         default=os.getcwd(),
                         help="Where the Jenkins configuration is located. "
