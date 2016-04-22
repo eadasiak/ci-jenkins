@@ -72,12 +72,12 @@ Requires Scopes:
     <hudson.tasks.Shell>
       <command>#!/bin/bash -e
 if [[ -z $TEMPLATE_LIB_GIT_URL ]]; then
-  echo "TEMPLATE_LIB_GIT_URL env var not set"
+  echo &quot;TEMPLATE_LIB_GIT_URL env var not set&quot;
   exit 1
 fi
 
 if [[ -z $TEMPLATE_GIT_URL ]]; then
-  echo "TEMPLATE_GIT_URL env var not set"
+  echo &quot;TEMPLATE_GIT_URL env var not set&quot;
   exit 1
 fi
 
@@ -107,7 +107,7 @@ CRED_IDS=$(echo $CRED_IDS|python -c &apos;import sys, json; print &quot; &quot;.
 echo &quot;Deleting credentials: [ $CRED_IDS ]&quot;
 for cred in $CRED_IDS; do
     echo &quot;DELETING /credential-store/domain/_/credential/$cred/doDelete&quot;
-    curl -X POST ${CREDS}127.0.0.1:8080/credential-store/domain/_/credential/$cred/doDelete
+    curl -s -X POST ${CREDS}127.0.0.1:8080/credential-store/domain/_/credential/$cred/doDelete
 done
 
 </command>
@@ -301,7 +301,11 @@ if [[ -z $PROVISIONER ]]; then
     fi
 
     if [[ ! -z $TEMPLATE_GIT_URL ]]; then
-        $JENKINS_HOME/mesos/scripts/configure-update-templates.py --workspace $JENKINS_HOME $TEMPLATE_GIT_URL $SSH_KEY_ID
+        $JENKINS_HOME/mesos/scripts/configure-update-templates.py \
+            --workspace $JENKINS_HOME \
+            $SSH_KEY_ID \
+            $TEMPLATE_GIT_URL \
+            $TEMPLATE_LIB_GIT_URL
     fi
 fi</command>
     </hudson.tasks.Shell>
@@ -319,11 +323,11 @@ if [[ $username != &quot;&quot; ]]; then
     CREDS=&quot;$username:$password@&quot;
 fi
 
-echo &quot;Re-Registering GitHub push webhooks&quot;
-curl -X POST ${CREDS}127.0.0.1:8080/descriptorByName/github-plugin-configuration/reRegister
-
 echo &quot;============================ SYSTEM RESTART ============================&quot;
-curl -X POST ${CREDS}127.0.0.1:8080/safeRestart</command>
+curl -s -X POST ${CREDS}127.0.0.1:8080/safeRestart
+
+echo "You may want to run the following command to re-register push notifications after reboot:"
+echo "curl -X POST 127.0.0.1:8080/descriptorByName/github-plugin-configuration/reRegister"</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
