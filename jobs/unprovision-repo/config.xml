@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>repo</name>
+          <description>repository name</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+if [[ -z $PROVISIONER ]]; then
+    exit 0
+fi
+
+if [[ ! -d ~/.chamberlain/libs ]]; then
+    exit 0
+fi
+
+cd ~/.chamberlain/libs
+
+for dir in $(ls); do
+    cd $dir
+    if [[ -d .git ]]; then
+        git add . &amp;&amp; git reset --hard &amp;&amp; git clean -ffdx
+        git fetch --all
+        git checkout origin/master
+    fi
+    cd ..
+done
+    </command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash -xe
+
+if [[ -z $PROVISIONER ]]; then
+    exit 0
+fi
+
+if [[ -z $TEMPLATE_GIT_URL ]]; then
+    exit 0
+fi
+
+REPO_TEMPLATE=&quot;project-${repo/\//_}.yml&quot;
+REPO_NAME=$(echo $TEMPLATE_GIT_URL|cut -d: -f2)
+rm -rf $TEMPLATE_DIR/$REPO_NAME || :
+git clone $TEMPLATE_GIT_URL $TEMPLATE_DIR/$REPO_NAME
+rm -f &quot;${TEMPLATE_DIR}/${REPO_NAME}${REPO_TEMPLATE}&quot;
+
+# commit &amp; push
+cd $TEMPLATE_DIR/$REPO_NAME
+git add .
+commit_msg=&quot;removed $REPO_TEMPLATE [$templates] $(date +&quot;%b %d, %Y&quot;)&quot;
+git commit -m &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
+
+cd $JENKINS_HOME/jobs
+jenkins-jobs delete $(ls|grep -v &apos;provision\|provision-repo\|self-update\|update-templates&apos;) || :</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
