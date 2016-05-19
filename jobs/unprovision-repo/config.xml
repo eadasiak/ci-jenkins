@@ -61,7 +61,7 @@ REPO_TEMPLATE=&quot;project-${repo/\//_}.yml&quot;
 REPO_NAME=$(echo $TEMPLATE_GIT_URL|cut -d: -f2)
 rm -rf $TEMPLATE_DIR/$REPO_NAME || :
 git clone $TEMPLATE_GIT_URL $TEMPLATE_DIR/$REPO_NAME
-rm -f &quot;${TEMPLATE_DIR}/${REPO_NAME}${REPO_TEMPLATE}&quot;
+rm -f &quot;${TEMPLATE_DIR}/${REPO_NAME}/${REPO_TEMPLATE}&quot;
 
 # commit &amp; push
 cd $TEMPLATE_DIR/$REPO_NAME
