@@ -61,13 +61,12 @@ REPO_TEMPLATE=&quot;project-${repo/\//_}.yml&quot;
 REPO_NAME=$(echo $TEMPLATE_GIT_URL|cut -d: -f2)
 rm -rf $TEMPLATE_DIR/$REPO_NAME || :
 git clone $TEMPLATE_GIT_URL $TEMPLATE_DIR/$REPO_NAME
-rm -f &quot;${TEMPLATE_DIR}/${REPO_NAME}/${REPO_TEMPLATE}&quot;
+rm -f &quot;${TEMPLATE_DIR}/${REPO_NAME}/local/${REPO_TEMPLATE}&quot;
 
 # commit &amp; push
 cd $TEMPLATE_DIR/$REPO_NAME
-git add .
-commit_msg=&quot;removed $REPO_TEMPLATE [$templates] $(date +&quot;%b %d, %Y&quot;)&quot;
-git commit -m &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
+commit_msg=&quot;removed $REPO_TEMPLATE $(date +&quot;%b %d, %Y&quot;)&quot;
+git commit -am &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
 
 cd $JENKINS_HOME/jobs
 jenkins-jobs delete $(ls|grep -v &apos;provision\|provision-repo\|self-update\|update-templates&apos;) || :</command>
