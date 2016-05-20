@@ -100,7 +100,7 @@ done
 
 cd $JENKINS_HOME/jobs
 echo &quot;================ REMOVING OLD JOBS ================&quot;
-OLD_JOBS=$(ls|grep -v $BLACKLIST)
+OLD_JOBS=$(ls|grep -v $BLACKLIST) || :
 jenkins-jobs delete $OLD_JOBS || :</command>
     </hudson.tasks.Shell>
   </builders>
