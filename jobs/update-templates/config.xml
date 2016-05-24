@@ -104,7 +104,7 @@ done
 cd $JENKINS_HOME/jobs
 OLD_JOBS=$(ls)
 for job in $BLACKLIST; do
-    OLD_JOBS=$(echo &quot;$OLD_JOBS&quot; | grep -v &quot;$job&quot; || :)
+    OLD_JOBS=$(echo &quot;$OLD_JOBS&quot; | grep -v &quot;$job&quot; || echo &quot;$OLD_JOBS&quot;)
 done
 echo &quot;================ REMOVING OLD JOBS ================&quot;
 if [[ -z $OLD_JOBS ]]; then
