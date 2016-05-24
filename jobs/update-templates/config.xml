@@ -93,11 +93,10 @@ cat joblist
 JOBS=$(cat joblist|grep -e &apos;Reconfiguring\|Creating&apos;|awk &apos;{print $4}&apos;)
 rm joblist
 
-# first line - jobs on this instance
-# second - manually created ones that should not be deleted
+BLACKLIST=&quot;provision provision-repo self-update unprovision-repo update-templates&quot;
+# manually created ones that should not be deleted
 # TODO: maybe make this an env var
-BLACKLIST=&quot;provision provision-repo self-update unprovision-repo update-templates \
-moonbeam moonmaker orca- flight-director-deploy ethos-tutorial-&quot;
+BLACKLIST=&quot;$BLACKLIST moonbeam moonmaker orca- flight-director-deploy ethos-tutorial-&quot;
 for jobname in $JOBS; do
     BLACKLIST=&quot;$BLACKLIST $jobname&quot;
 done
@@ -105,7 +104,7 @@ done
 cd $JENKINS_HOME/jobs
 OLD_JOBS=$(ls)
 for job in $BLACKLIST; do
-    OLD_JOBS=$(echo &quot;$OLD_JOBS&quot; | grep -v $job)
+    OLD_JOBS=$(echo &quot;$OLD_JOBS&quot; | grep -v &quot;$job&quot; || :)
 done
 echo &quot;================ REMOVING OLD JOBS ================&quot;
 if [[ -z $OLD_JOBS ]]; then
