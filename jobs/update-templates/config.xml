@@ -22,7 +22,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>#!/bin/bash -e
+      <command>#!/bin/bash
 
 # signs/flags indicating that this job should not be run
 if [[ ! -f $JENKINS_HOME/credentials ]]; then
@@ -96,7 +96,7 @@ rm joblist
 BLACKLIST=&quot;provision provision-repo self-update unprovision-repo update-templates&quot;
 # manually created ones that should not be deleted
 # TODO: maybe make this an env var
-BLACKLIST=&quot;$BLACKLIST moonbeam moonmaker orca- flight-director-deploy ethos-tutorial-&quot;
+BLACKLIST=&quot;$BLACKLIST moonbeam moonmaker orca- deploy-orca- flight-director-deploy ethos-tutorial-&quot;
 for jobname in $JOBS; do
     BLACKLIST=&quot;$BLACKLIST $jobname&quot;
 done
@@ -104,7 +104,7 @@ done
 cd $JENKINS_HOME/jobs
 OLD_JOBS=$(ls)
 for job in $BLACKLIST; do
-    OLD_JOBS=$(echo &quot;$OLD_JOBS&quot; | grep -v &quot;$job&quot; || echo &quot;$OLD_JOBS&quot;)
+    OLD_JOBS=$(echo &quot;$OLD_JOBS&quot; | grep -ve &quot;^$job&quot;)
 done
 echo &quot;================ REMOVING OLD JOBS ================&quot;
 if [[ -z $OLD_JOBS ]]; then
