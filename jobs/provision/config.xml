@@ -25,12 +25,32 @@ Requires Scopes:
     - admin:repo_hook:
          - write:repo_hook
          - read:repo_hook</description>
-          <defaultValue>7313vhek7bhECsYB4LHZHw==</defaultValue>
+          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>GHAPIURL</name>
           <description>[REQUIRED] Address of Github API server. For corp: https://&lt;ENTERPRISE-GIT-URL&gt;/api/v3</description>
           <defaultValue>https://api.github.com</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>s3bucket</name>
+          <description>Bucket in S3 that this instance can write to using AWS credentials below.</description>
+          <defaultValue>ci-jenkins</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>awskey</name>
+          <description>[OPTIONAL] AWS Key</description>
+          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>awssecret</name>
+          <description>[OPTIONAL] AWS Secret</description>
+          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>awsregion</name>
+          <description>[OPTIONAL] Default AWS region where s3bucket lives.</description>
+          <defaultValue>us-east-1</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>mesos</name>
@@ -45,7 +65,7 @@ Requires Scopes:
         <hudson.model.PasswordParameterDefinition>
           <name>mesosPassword</name>
           <description>[OPTIONAL] Mesos framework password.</description>
-          <defaultValue>zwaxdcxhouD193RsK/JT4g==</defaultValue>
+          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>username</name>
@@ -55,14 +75,13 @@ Requires Scopes:
         <hudson.model.PasswordParameterDefinition>
           <name>password</name>
           <description>[OPTIONAL] Password or api token for the given user</description>
-          <defaultValue>7313vhek7bhECsYB4LHZHw==</defaultValue>
+          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
         </hudson.model.PasswordParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
-  <assignedNode>master</assignedNode>
-  <canRoam>false</canRoam>
+  <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
@@ -316,6 +335,23 @@ echo &quot;Wrote to $JENKINS_HOME/credentials&quot;
 cat $JENKINS_HOME/credentials</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
+      <command>#!/bin/bash -e
+
+if [ -z $awskey ] || [ -z $awssecret ]; then
+    echo &quot;No AWS credentials provided, cleaning configs &amp; skipping AWS setup.&quot;
+    rm -f $JENKINS_HOME/s3-creds || :
+    exit 0
+fi
+
+echo &quot;Configuring s3-build-upload job &amp; adding S3 profile to global config&quot;
+cat &lt;&lt; EOF &gt;&gt; $JENKINS_HOME/s3-creds
+AWS_ACCESS_KEY_ID=$awskey
+AWS_SECRET_ACCESS_KEY=$awssecret
+AWS_DEFAULT_REGION=$awsregion
+S3BUCKET=$s3bucket
+EOF</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
       <command>#!/bin/bash
 
 CREDS=&quot;&quot;
@@ -326,8 +362,8 @@ fi
 echo &quot;============================ SYSTEM RESTART ============================&quot;
 curl -s -X POST ${CREDS}127.0.0.1:8080/safeRestart
 
-echo "You may want to run the following command to re-register push notifications after reboot:"
-echo "curl -X POST 127.0.0.1:8080/descriptorByName/github-plugin-configuration/reRegister"</command>
+echo &quot;You may want to run the following command to re-register push notifications after reboot:&quot;
+echo &quot;curl -X POST 127.0.0.1:8080/descriptorByName/github-plugin-configuration/reRegister&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
