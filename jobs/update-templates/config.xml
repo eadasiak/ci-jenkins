@@ -93,7 +93,7 @@ cat joblist
 JOBS=$(cat joblist|grep -e &apos;Reconfiguring\|Creating&apos;|awk &apos;{print $4}&apos;)
 rm joblist
 
-BLACKLIST=&quot;provision provision-repo self-update unprovision-repo update-templates&quot;
+BLACKLIST=&quot;provision provision-repo self-update unprovision-repo update-templates s3-build-upload&quot;
 # manually created ones that should not be deleted
 # TODO: maybe make this an env var
 BLACKLIST=&quot;$BLACKLIST moonbeam moonmaker orca- deploy-orca- flight-director-deploy ethos-tutorial-&quot;
