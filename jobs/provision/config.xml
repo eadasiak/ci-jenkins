@@ -345,10 +345,10 @@ fi
 
 echo &quot;Configuring s3-build-upload job &amp; adding S3 profile to global config&quot;
 cat &lt;&lt; EOF &gt;&gt; $JENKINS_HOME/s3-creds
-AWS_ACCESS_KEY_ID=$awskey
-AWS_SECRET_ACCESS_KEY=$awssecret
-AWS_DEFAULT_REGION=$awsregion
-S3BUCKET=$s3bucket
+export AWS_ACCESS_KEY_ID=$awskey
+export AWS_SECRET_ACCESS_KEY=$awssecret
+export AWS_DEFAULT_REGION=$awsregion
+export S3BUCKET=$s3bucket
 EOF</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
