@@ -30,6 +30,11 @@
               <hostPath>/root/.ssh</hostPath>
               <readOnly>true</readOnly>
             </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+            <org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+              <containerPath>/root/.dockercfg</containerPath>
+              <hostPath>/root/.dockercfg</hostPath>
+              <readOnly>true</readOnly>
+            </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
           </volumes>
           <networking>BRIDGE</networking>
           <useCustomDockerCommandShell>true</useCustomDockerCommandShell>
