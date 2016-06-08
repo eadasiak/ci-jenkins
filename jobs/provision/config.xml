@@ -289,7 +289,11 @@ $JENKINS_HOME/mesos/scripts/configure-gh-plugin.py --workspace $JENKINS_HOME ghp
 echo &quot;Configuring Mesos&quot;
 ARGS=&quot;&quot;
 if [[ ! -z $mesosUser ]] &amp;&amp; [[ ! -z $mesosPassword ]]; then
-DATA=&apos;json={
+    # required because of this bug https://issues.jenkins-ci.org/browse/JENKINS-16143
+    # adding slashes escapes properly but then the slashes show up in the value so they
+    # have to be removed too
+    mesosPassword=$(echo $mesosPassword | sed -e &apos;s/\\//g&apos;)
+    DATA=&apos;json={
         &quot;&quot;: &quot;0&quot;,
         &quot;credentials&quot;: {
             &quot;scope&quot;: &quot;GLOBAL&quot;,
@@ -300,17 +304,17 @@ DATA=&apos;json={
             &quot;$class&quot;: &quot;com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&quot;
         }
     }&apos;
-DATA=$(echo ${DATA/PASSWORD/$mesosPassword})
-DATA=$(echo ${DATA/USER/$mesosUser})
-curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
-     --data-urlencode &quot;$DATA&quot;
+    DATA=$(echo ${DATA/PASSWORD/$mesosPassword})
+    DATA=$(echo ${DATA/USER/$mesosUser})
+    curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
+         --data-urlencode &quot;$DATA&quot;
 
-# write mesos-framework credential ID
-MESOS_CRED_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot;|\
-grep &quot;Mesos-&quot; -B1|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
-echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
+    # write mesos-framework credential ID
+    MESOS_CRED_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot;|\
+    grep &quot;Mesos-&quot; -B1|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
+    echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
 
-ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
+    ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
 fi
 
 if [[ -z $PROVISIONER ]]; then
