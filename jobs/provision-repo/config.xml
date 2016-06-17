@@ -79,8 +79,15 @@ if [[ ! -z $PROVISIONER ]]; then
     OAUTH_ID=&quot;{ghprauth}&quot;
 fi
 
-chamberlain gh-sync -f local $templates --params gitauth:$SSH_KEY ghprauth:$OAUTH_ID
-</command>
+TEMPLATE_PARAMS=&quot;&quot;
+if [[ -f $JENKINS_HOME/user-params ]]; then
+    echo &quot;Sourcing $JENKINS_HOME/user-params&quot;
+    cat $JENKINS_HOME/user-params
+    source $JENKINS_HOME/user-params
+fi
+TEMPLATE_PARAMS=&quot;--params gitauth:$SSH_KEY ghprauth:$OAUTH_ID $TEMPLATE_PARAMS&quot;
+
+chamberlain gh-sync -f local $templates $TEMPLATE_PARAMS</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
