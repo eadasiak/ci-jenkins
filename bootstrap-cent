@@ -1,0 +1,8 @@
+#!bash
+
+yum install -y git
+git clone https://github.com/adobe-platform/ci-jenkins /var/lib/jenkins
+
+cd /var/lib/jenkins && make cent
+
+systemctl start jenkins

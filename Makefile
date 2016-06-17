@@ -42,8 +42,9 @@ reader:
 # 		git clone git@github.com:adobe-platform/ci-jenkins <YOUR JENKINS HOME>
 # TODO: probably should just be a placeholder for a chef cookbook
 cent:
-	rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
-	yum -y install mesos marathon awscli
+	# rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+	# yum -y install mesos marathon awscli
+	yum -y install awscli
 	wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
 	rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
 	yum install -y java jenkins libffi-devel openssl-devel gcc
