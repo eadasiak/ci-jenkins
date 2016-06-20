@@ -25,7 +25,7 @@ Requires Scopes:
     - admin:repo_hook:
          - write:repo_hook
          - read:repo_hook</description>
-          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+          <defaultValue>qG8wgxVJSV0DiHUWWW7Wvw5oqf87v3uSKaeHCPK6Ej/5clNtnZEJLfJXD9y8497V</defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>GHAPIURL</name>
@@ -33,19 +33,34 @@ Requires Scopes:
           <defaultValue>https://api.github.com</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
+          <name>GITHUB_DOMAIN</name>
+          <description>[REQUIRED] Domain of your github server. Used to whitelist SSH connections to github.</description>
+          <defaultValue>github.com</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TEMPLATE_LIB_GIT_URL</name>
+          <description>[REQUIRED] SSH URL of your Jenkins Job Templates</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TEMPLATE_GIT_URL</name>
+          <description>[REQUIRED] SSH URL of the repo that you&apos;ll use to keep state of these instances</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
           <name>s3bucket</name>
-          <description>Bucket in S3 that this instance can write to using AWS credentials below.</description>
+          <description>[OPTIONAL] Bucket in S3 that this instance can write to using AWS credentials below.</description>
           <defaultValue>ci-jenkins</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.PasswordParameterDefinition>
           <name>awskey</name>
           <description>[OPTIONAL] AWS Key</description>
-          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+          <defaultValue>qG8wgxVJSV0DiHUWWW7Wvw5oqf87v3uSKaeHCPK6Ej/5clNtnZEJLfJXD9y8497V</defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.PasswordParameterDefinition>
           <name>awssecret</name>
           <description>[OPTIONAL] AWS Secret</description>
-          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+          <defaultValue>qG8wgxVJSV0DiHUWWW7Wvw5oqf87v3uSKaeHCPK6Ej/5clNtnZEJLfJXD9y8497V</defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>awsregion</name>
@@ -65,7 +80,7 @@ Requires Scopes:
         <hudson.model.PasswordParameterDefinition>
           <name>mesosPassword</name>
           <description>[OPTIONAL] Mesos framework password.</description>
-          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+          <defaultValue>qG8wgxVJSV0DiHUWWW7Wvw5oqf87v3uSKaeHCPK6Ej/5clNtnZEJLfJXD9y8497V</defaultValue>
         </hudson.model.PasswordParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>username</name>
@@ -75,8 +90,32 @@ Requires Scopes:
         <hudson.model.PasswordParameterDefinition>
           <name>password</name>
           <description>[OPTIONAL] Password or api token for the given user</description>
-          <defaultValue>RmmeHWk0MCIBW6uJVn9s/A==</defaultValue>
+          <defaultValue>qG8wgxVJSV0DiHUWWW7Wvw5oqf87v3uSKaeHCPK6Ej/5clNtnZEJLfJXD9y8497V</defaultValue>
         </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>templateParams</name>
+          <description>[OPTIONAL] a list of parameters that you would like to be passed to your templates.
+
+e.g.:
+
+Providing:
+
+notificationURL:&quot;https://my.notification.service.lan&quot;
+
+Will fill out the following template as expected
+
+- job-template:
+     name: &apos;notification-job&apos;
+     project-type: freestyle
+     concurrent: true
+     notifications:
+       - http:
+           url: &apos;{notificationURL}&apos;
+
+When the provision-repo job is invoked.
+This is done via chamberlain.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -289,7 +328,11 @@ $JENKINS_HOME/mesos/scripts/configure-gh-plugin.py --workspace $JENKINS_HOME ghp
 echo &quot;Configuring Mesos&quot;
 ARGS=&quot;&quot;
 if [[ ! -z $mesosUser ]] &amp;&amp; [[ ! -z $mesosPassword ]]; then
-DATA=&apos;json={
+    # required because of this bug https://issues.jenkins-ci.org/browse/JENKINS-16143
+    # adding slashes escapes properly but then the slashes show up in the value so they
+    # have to be removed too
+    mesosPassword=$(echo $mesosPassword | sed -e &apos;s/\\//g&apos;)
+    DATA=&apos;json={
         &quot;&quot;: &quot;0&quot;,
         &quot;credentials&quot;: {
             &quot;scope&quot;: &quot;GLOBAL&quot;,
@@ -300,17 +343,17 @@ DATA=&apos;json={
             &quot;$class&quot;: &quot;com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&quot;
         }
     }&apos;
-DATA=$(echo ${DATA/PASSWORD/$mesosPassword})
-DATA=$(echo ${DATA/USER/$mesosUser})
-curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
-     --data-urlencode &quot;$DATA&quot;
+    DATA=$(echo ${DATA/PASSWORD/$mesosPassword})
+    DATA=$(echo ${DATA/USER/$mesosUser})
+    curl -XPOST &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/createCredentials&quot; \
+         --data-urlencode &quot;$DATA&quot;
 
-# write mesos-framework credential ID
-MESOS_CRED_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot;|\
-grep &quot;Mesos-&quot; -B1|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
-echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
+    # write mesos-framework credential ID
+    MESOS_CRED_ID=$(curl -sS &quot;${CREDS}127.0.0.1:8080/credential-store/domain/_/api/json?pretty=true&amp;depth=2&quot;|\
+    grep &quot;Mesos-&quot; -B1|head -n1|tr -s [:space:]|cut -d: -f1|sed &apos;s/&quot;//g&apos;|tr -d [:space:])
+    echo &quot;MESOS_CRED_ID=$MESOS_CRED_ID&quot; &gt;&gt; $JENKINS_HOME/credentials
 
-ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
+    ARGS=&quot;--sysid $MESOS_CRED_ID&quot;
 fi
 
 if [[ -z $PROVISIONER ]]; then
@@ -335,6 +378,13 @@ echo &quot;Wrote to $JENKINS_HOME/credentials&quot;
 cat $JENKINS_HOME/credentials</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo &quot;export TEMPLATE_PARAMS=\&quot;$templateParams\&quot;&quot; &gt; $JENKINS_HOME/user-params
+echo &quot;Wrote to $JENKINS_HOME/user-params&quot;
+cat $JENKINS_HOME/user-params</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
       <command>#!/bin/bash -e
 
 if [ -z $awskey ] || [ -z $awssecret ]; then
@@ -353,6 +403,10 @@ EOF</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
+
+sed -i.bak &quot;s~{{GITHUB_DOMAIN_PLACEHOLDER}}~$GITHUB_DOMAIN~g&quot; $JENKINS_HOME/config.xml
+sed -i.bak &quot;s~{{TEMPLATE_GIT_URL_PLACEHOLDER}}~$TEMPLATE_GIT_URL~g&quot; $JENKINS_HOME/config.xml
+sed -i.bak &quot;s~{{TEMPLATE_LIB_GIT_URL_PLACEHOLDER}}~$TEMPLATE_LIB_GIT_URL~g&quot; $JENKINS_HOME/config.xml
 
 CREDS=&quot;&quot;
 if [[ $username != &quot;&quot; ]]; then

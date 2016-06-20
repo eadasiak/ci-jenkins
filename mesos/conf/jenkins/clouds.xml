@@ -8,7 +8,7 @@
     <principal>jenkins</principal>
     <secret></secret>
     <checkpoint>true</checkpoint>
-    <onDemandRegistration>false</onDemandRegistration>
+    <onDemandRegistration>true</onDemandRegistration>
     <jenkinsURL></jenkinsURL>
     <slaveInfos>
       <org.jenkinsci.plugins.mesos.MesosSlaveInfo>
@@ -24,6 +24,18 @@
         <containerInfo>
           <type>DOCKER</type>
           <dockerImage>mesosphere/jenkins-dind:0.2.1</dockerImage>
+          <volumes>
+            <org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+              <containerPath>/root/.ssh</containerPath>
+              <hostPath>/root/.ssh</hostPath>
+              <readOnly>true</readOnly>
+            </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+            <org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+              <containerPath>/root/.dockercfg</containerPath>
+              <hostPath>/root/.dockercfg</hostPath>
+              <readOnly>true</readOnly>
+            </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+          </volumes>
           <networking>BRIDGE</networking>
           <useCustomDockerCommandShell>true</useCustomDockerCommandShell>
           <customDockerCommandShell>wrapper.sh</customDockerCommandShell>

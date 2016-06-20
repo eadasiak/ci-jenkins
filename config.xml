@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <hudson>
   <disabledAdministrativeMonitors/>
-  <version>1.642.2</version>
+  <version>1.642.4</version>
   <numExecutors>1</numExecutors>
   <mode>NORMAL</mode>
   <useSecurity>true</useSecurity>
@@ -38,9 +38,15 @@
           <default>
             <comparator class="hudson.util.CaseInsensitiveComparator"/>
           </default>
-          <int>1</int>
+          <int>4</int>
+          <string>GITHUB_DOMAIN</string>
+          <string>{{GITHUB_DOMAIN_PLACEHOLDER}}</string>
           <string>TEMPLATE_DIR</string>
           <string>$JENKINS_HOME/templates</string>
+          <string>TEMPLATE_GIT_URL</string>
+          <string>{{TEMPLATE_GIT_URL_PLACEHOLDER}}</string>
+          <string>TEMPLATE_LIB_GIT_URL</string>
+          <string>{{TEMPLATE_LIB_GIT_URL_PLACEHOLDER}}</string>
         </tree-map>
       </envVars>
     </hudson.slaves.EnvironmentVariablesNodeProperty>
