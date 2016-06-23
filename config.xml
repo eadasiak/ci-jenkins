@@ -47,6 +47,8 @@
           <string>{{TEMPLATE_GIT_URL_PLACEHOLDER}}</string>
           <string>TEMPLATE_LIB_GIT_URL</string>
           <string>{{TEMPLATE_LIB_GIT_URL_PLACEHOLDER}}</string>
+          <string>MANAGED_INSTANCES</string>
+          <string></string>
         </tree-map>
       </envVars>
     </hudson.slaves.EnvironmentVariablesNodeProperty>

@@ -70,6 +70,8 @@ git commit -am &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
 
 cd $JENKINS_HOME/jobs
 jenkins-jobs delete $(ls|grep -v &apos;provision\|provision-repo\|self-update\|update-templates&apos;) || :</command>
+
+chamberlain delete-hooks --force $repo $JENKINS_URL $MANAGED_INSTANCES
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
