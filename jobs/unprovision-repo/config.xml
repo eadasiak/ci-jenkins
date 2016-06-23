@@ -69,9 +69,9 @@ commit_msg=&quot;removed $REPO_TEMPLATE $(date +&quot;%b %d, %Y&quot;)&quot;
 git commit -am &quot;$commit_msg&quot; &amp;&amp; git push origin master || :
 
 cd $JENKINS_HOME/jobs
-jenkins-jobs delete $(ls|grep -v &apos;provision\|provision-repo\|self-update\|update-templates&apos;) || :</command>
+jenkins-jobs delete $(ls|grep -v &apos;provision\|provision-repo\|self-update\|update-templates&apos;) || :
 
-chamberlain delete-hooks --force $repo $JENKINS_URL $MANAGED_INSTANCES
+chamberlain delete-hooks --force $repo $JENKINS_URL $MANAGED_INSTANCES</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
