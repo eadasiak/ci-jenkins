@@ -1,0 +1,15 @@
+{
+  "id": "jenkins-swarm-agent",
+  "cpus": 1.0,
+  "mem": 2048,
+  "instances": 1,
+  "ports": [0, 0],
+  "container": {
+       "type": "DOCKER",
+       "docker": {
+           "image": "eadasiak/jenkins-swarm-agent:0.1",
+           "network": "HOST"
+       },
+   },
+   "args": "-master $JENKINS_URL",
+}
