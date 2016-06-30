@@ -1,15 +1,27 @@
 {
   "id": "jenkins-swarm-agent",
   "cpus": 1.0,
-  "mem": 2048,
-  "instances": 1,
-  "ports": [0, 0],
+  "mem": 1024,
+  "instances": 2,
+  "args": ["-master", "$JENKINS_URL"],
+
   "container": {
        "type": "DOCKER",
        "docker": {
-           "image": "eadasiak/jenkins-swarm-agent:0.1",
+           "image": "eadasiak/jenkins-swarm-agent:0.4",
            "network": "HOST"
        },
-   },
-   "args": "-master $JENKINS_URL",
+       "volumes": [
+         {
+           "hostPath": "/var/run/docker.sock",
+           "containerPath": "/var/run/docker.sock",
+           "mode": "RW"
+         },
+         {
+           "hostPath": "/usr/bin/docker",
+           "containerPath": "/usr/bin/docker",
+           "mode": "RO"
+         }
+       ]
+   }
 }

@@ -1,10 +1,8 @@
 FROM java:8u45-jdk
 
-MAINTAINER Carlos Sanchez <carlos@apache.org>
-
 ENV DOCKER_VERSION 1.9.1
 ENV JENKINS_SWARM_VERSION 2.1
-ENV HOME /home/jenkins-slave
+ENV HOME /usr/share/jenkins
 
 # install Docker first
 RUN apt-get update && \
@@ -16,13 +14,10 @@ RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 581
   apt-get install -y -q docker-engine=$DOCKER_VERSION-0~trusty net-tools && \
   rm -rf /var/lib/apt/lists/*
 
-RUN useradd -c "Jenkins Slave user" -d $HOME -m jenkins-slave
+# install the Jenkins Swarm Agent
 RUN curl --create-dirs -sSLo /usr/share/jenkins/swarm-client-$JENKINS_SWARM_VERSION-jar-with-dependencies.jar http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/$JENKINS_SWARM_VERSION/swarm-client-$JENKINS_SWARM_VERSION-jar-with-dependencies.jar && \
   chmod 755 /usr/share/jenkins
 
 COPY jenkins-slave.sh /usr/local/bin/jenkins-slave.sh
-
-USER jenkins-slave
-VOLUME /home/jenkins-slave
 
 ENTRYPOINT ["/usr/local/bin/jenkins-slave.sh"]
