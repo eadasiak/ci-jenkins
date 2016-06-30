@@ -128,10 +128,6 @@ DATA=$(&lt; &lt;(cat &lt;&lt; EOF
 EOF
 ))
 
-echo ${DATA}
-echo ${MARATHON_CREDS}
-
-echo curl -k -X POST -H &quot;Content-type: application/json&quot; -d ${DATA} -u ${MARATHON_CREDS} ${swarmMarathonEndpoint}/v2/apps
 curl -k -X POST -H &quot;Content-type: application/json&quot; -d &quot;${DATA}&quot; -u ${MARATHON_CREDS} ${swarmMarathonEndpoint}/v2/apps </command>
     </hudson.tasks.Shell>
   </builders>
