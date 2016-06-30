@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmMarathonEndpoint</name>
+          <description>[OPTIONAL] - Marathon installation to deploy the Jenkins Swarm agents to</description>
+          <defaultValue>http://marathon:8080</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmImage</name>
+          <description>[OPTIONAL] - Jenkins Swarm Docker image and version to use</description>
+          <defaultValue>adobe-platform/jenkins-swarm-agent:0.2</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmMarathonCPU</name>
+          <description>[OPTIONAL] - The number of CPU resources to allocate to the Jenkins Swarm Agent instances on Mesos/Marathon</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmMarathonMEM</name>
+          <description>[OPTIONAL] - The amount of memory to allocate to the Jenkins Swarm Agent instances on Mesos/Marathon</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmMarathonInstances</name>
+          <description>[OPTIONAL] - The number of Jenkins Swarm Agent instances to launch on Mesos/Marathon</description>
+          <defaultValue>1</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmMarathonUsername</name>
+          <description>[OPTIONAL] - The username for the Marathon REST API credentials</description>
+          <defaultValue>marathon</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>swarmMarathonPassword</name>
+          <description>[OPTIONAL] - The password for the Marathon REST API credentials</description>
+          <defaultValue>IMBS0YKUXrws0N9qkCLzYCGQm1p9+lsjOcxyNncJvaU=</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmJenkinsHost</name>
+          <description>[OPTIONAL] - The URL of the Jenkins instance running the Jenkins Swarm Agent plugin</description>
+          <defaultValue>http://jenkins:8080/</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmJenkinsUsername</name>
+          <description>[OPTIONAL] - The Jenkins username for authentication </description>
+          <defaultValue>jenkins</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>swarmJenkinsPassword</name>
+          <description>[OPTIONAL] - The Jenkins user&apos;s password</description>
+          <defaultValue>j7RXHvfIXLVx6/5SnpSLkA==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>swarmExecutors</name>
+          <description>[OPTIONAL] - The number of executors to spawn on each Swarm Agent</description>
+          <defaultValue>2</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+# setup POST command credential string
+MARATHON_CREDS=&quot;&quot;
+if [[ $swarmMarathonUsername != &quot;&quot; ]]; then
+    MARATHON_CREDS=&quot;$swarmMarathonUsername:$swarmMarathonPassword&quot;
+    echo &quot;Creating Marathon secrets as ${swarmMarathonUsername}...&quot;
+fi
+
+# build Swarm Args
+SWARM_ARGS=&quot;\&quot;-master\&quot;, \&quot;${swarmJenkinsHost}\&quot;, \&quot;-executors\&quot;, \&quot;${swarmExecutors}\&quot;&quot;
+if [[ $swarmJenkinsUsername != &quot;&quot; ]]; then
+    SWARM_CREDS=&quot; \&quot;-username\&quot;, \&quot;${swarmJenkinsUsername}\&quot;, \&quot;-password\&quot;, \&quot;${swarmJenkinsPassword}\&quot;&quot;
+    echo &quot;Creating Swarm secrets as ${swarmJenkinsUsername}...&quot;
+    SWARM_ARGS+=SWARM_CREDS
+fi
+
+
+# Marathon app definition payload
+DATA=$(&lt; &lt;(cat &lt;&lt; EOF
+{
+  &quot;id&quot;: &quot;jenkins-swarm-agent&quot;,
+  &quot;cpus&quot;: ${swarmMarathonCPU},
+  &quot;mem&quot;: ${swarmMarathonMEM},
+  &quot;instances&quot;: ${swarmMarathonInstances},
+  &quot;args&quot;:
+    [
+      ${SWARM_ARGS}
+    ],
+  &quot;container&quot;:
+    {
+      &quot;type&quot;: &quot;DOCKER&quot;,
+      &quot;docker&quot;:
+        {
+          &quot;image&quot;: &quot;${swarmImage}&quot;,
+          &quot;network&quot;: &quot;HOST&quot;
+        },
+      &quot;volumes&quot;:
+        [
+          {
+            &quot;hostPath&quot;: &quot;/var/run/docker.sock&quot;,
+            &quot;containerPath&quot;: &quot;/var/run/docker.sock&quot;,
+            &quot;mode&quot;: &quot;RW&quot;
+          },
+          {
+            &quot;hostPath&quot;: &quot;/usr/bin/docker&quot;,
+            &quot;containerPath&quot;: &quot;/usr/bin/docker&quot;,
+            &quot;mode&quot;: &quot;RO&quot;
+          }
+        ]
+    }
+}
+EOF
+))
+
+echo ${DATA}
+echo ${MARATHON_CREDS}
+
+echo curl -k -X POST -H &quot;Content-type: application/json&quot; -d ${DATA} -u ${MARATHON_CREDS} ${swarmMarathonEndpoint}/v2/apps
+curl -k -X POST -H &quot;Content-type: application/json&quot; -d &quot;${DATA}&quot; -u ${MARATHON_CREDS} ${swarmMarathonEndpoint}/v2/apps </command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
